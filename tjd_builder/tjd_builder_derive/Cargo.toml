@@ -1,11 +1,12 @@
 [package]
-name = "types"
+name = "tjd_builder_derive"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+proc-macro = true
 
 [dependencies]
-# regex = "1.6"
-# tjd_builder = { path = "../tjd_builder"}
-# tjd_builder_derive = { path = "../tjd_builder/tjd_builder_derive"}
+syn = "1.0"
+quote = "1.0"
