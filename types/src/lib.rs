@@ -176,6 +176,13 @@ impl Field {
     }
 }
 
+#[derive(Debug)]
+struct TableField {
+    display_name: Mutex<String>,
+    field: &'static str,
+    archived: bool
+}
+
 // used to track exchanges with TJD api
 struct TjdApiResponse<T> {
     success: bool,
@@ -241,6 +248,7 @@ mod tests {
         }
     }
     
+    // make starter/default fields out of all types
     #[test]
     fn default_fields(){
         // init
@@ -261,5 +269,53 @@ mod tests {
                 None => println!("Failed to get default field: {}", type_name)
             }
         }
+    }
+    
+    // make a basic table out of several fields
+    fn create_simple_table(){
+        // init
+        let tjd_types = Types::new();
+        let tjd = TJD::new(tjd_types);
+        
+        // give table a name
+        let happy_tbl_name = "Happy test table";
+        // set up table fields
+        let mut happy_tbl_fields: HashMap<String, &'static str> = HashMap::new();
+        
+        // loop default fields to make a test
+        for field in tjd.fields.keys() {
+            // style an example table field name
+            let tbl_field_name = "Table test field for ".to_owned() + field;
+            // add example table field to test table
+            happy_tbl_fields.insert(tbl_field_name, field);
+        }
+        
+        // create new table
+        let happy_tbl_create_res = tjd.create_table(happy_tbl_name, happy_tbl_fields);
+        assert_eq!(happy_tbl_create_res.success, true);
+        
+        // try making a second table with nonexistent fields
+        let conflict_tbl_name = "South pole test table";
+        // set up table fields
+        let mut conflict_tbl_fields: HashMap<String, &'static str> = HashMap::new();
+        
+        // loop default fields to make a test
+        for field in tjd.fields.keys() {
+            // style an example table field name
+            let tbl_field_name = "Table test field for ".to_owned() + field;
+            
+            // add example table field to test table with bad field ref name
+            conflict_tbl_fields.insert(tbl_field_name, "fake_field");
+        }
+        
+        // create new table
+        let conflict_tbl_create_res = tjd.create_table(conflict_tbl_name, conflict_tbl_fields);
+        assert_eq!(conflict_tbl_create_res.success, false);
+        
+        /* note to self: tables need ability to archive table fields
+            possibly removing a table field, then creating a new table field with
+            the same name.
+            
+            Add test for accidentally allowing the same field name twice */
     }
 }
