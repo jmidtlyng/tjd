@@ -172,7 +172,24 @@ impl Field {
     fn new(display_name: String, tjd_type: &'static str, _archived: Option<bool>) -> Field{
         let archived = _archived.unwrap_or(false);
         
-        Field{display_name: Mutex::new(display_name), tjd_type, archived}
+        Field {display_name: Mutex::new(display_name), tjd_type, archived}
+    }
+}
+
+#[derive(Debug)]
+struct Table {
+    display_name: Mutex<String>,
+    fields: HashMap<&'static str, TableField>,
+    archived: bool
+}
+
+impl Table {
+    fn new(display_name: String,  _archived: Option<bool>) -> Table{
+        let archived = _archived.unwrap_or(false);
+        
+        Table { display_name: Mutex::new(display_name),
+                fields: HashMap::new(),
+                archived}
     }
 }
 
@@ -317,5 +334,29 @@ mod tests {
             the same name.
             
             Add test for accidentally allowing the same field name twice */
+    }
+    
+    // add field to table
+    fn add_field_to_table() {
+        // init
+        let tjd_types = Types::new();
+        let tjd = TJD::new(tjd_types);
+        
+        // create new table with no fields
+        let tbl_res = tjd.create_table("Test table".to_owned(), None);
+        
+        match tbl_res.value {
+            Some(tbl) => {
+                // add field to table
+                tjd.add_table_field(tbl, "i32", "Test table field 1")
+            },
+            None => {
+                // not supposed to happen. Return error message
+                match tbl_res.message {
+                    Some(message) => println!("{}", message),
+                    None => println!("No specific failure message to create a table")
+                }
+            }
+        }        
     }
 }
