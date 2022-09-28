@@ -146,7 +146,7 @@ impl TJD {
     fn create_table(&mut self,
                     table_name: &'static str,
                     display_name: String,
-                    _fields: Option<HashMap<String, &'static str>>)
+                    _fields: Option<HashMap<&'static str, (String, &'static str)>>)
             -> TjdApiResponse<Table> {
         // check for table with same name
         match self.tables.get(&table_name){   
@@ -168,8 +168,8 @@ impl TJD {
                 // if there are fields, add them to the table
                 match _fields {
                     Some(fields) => {
-                        for (field_display_name, field_name) in fields {
-                            self.add_table_field(tbl, field_name, field_display_name);
+                        for (tbl_field_name, (tbl_field_display_name, field_name)) in fields {
+                            self.create_table_field(table_name, tbl_field_name, field_name, tbl_field_display_name);
                         }
                     },
                     None => {}
@@ -179,6 +179,54 @@ impl TJD {
                 TjdApiResponse {
                     success: true,
                     message: Some(format!("Created table called {}", table_name)),
+                    value: None
+                }
+            }
+        }
+    }
+            
+    // create new table field from available field types
+    fn create_table_field(&mut self,
+                        tbl_name: &'static str,
+                        tbl_field_name: &'static str,
+                        field_name: &'static str,
+                        display_name: String)
+            -> TjdApiResponse<TableField> {
+        // get table from name
+        match self.tables.get(tbl_name){
+            Some(tbl) => {
+                // validate table doesnt already have this field
+                match tbl.fields.get(tbl_field_name) {
+                    Some(_tbl_field) => {
+                        // should not have had match. fail and warn
+                        // field name taken. notify client
+                        TjdApiResponse {
+                            success: false,
+                            message: Some(format!("Table already has field called '{}'.", tbl_field_name)),
+                            value: None
+                        }
+                    },
+                    None => {
+                        // no conflict so create and add to table
+                        let new_field = TableField::new(display_name, field_name);
+                        
+                        // attach table field to tjd table
+                        tbl.fields.insert(tbl_field_name, new_field);
+                        
+                        // notify client
+                        TjdApiResponse {
+                            success: false,
+                            message: Some(format!("Table already has field called '{}'.", tbl_field_name)),
+                            value: None
+                        }
+                    }
+                }
+            },
+            None => {
+                // no table matching this name
+                TjdApiResponse {
+                    success: false,
+                    message: Some(format!("No table called called '{}'.", tbl_name)),
                     value: None
                 }
             }
@@ -243,6 +291,15 @@ struct TableField {
     display_name: Mutex<String>,
     field: &'static str,
     archived: bool
+}
+
+impl TableField {
+    fn new(display_name: String, field: &'static str) -> TableField {
+        // give a display name and field reference   
+        TableField { display_name: Mutex::new(display_name),
+                    field,
+                    archived: false }
+    }
 }
 
 // used to track exchanges with TJD api
@@ -332,22 +389,24 @@ mod tests {
             }
         }
     }
-    
+
     // make a basic table out of several fields
+    #[test]    
     fn create_simple_table(){
         // init
         let tjd_types = Types::new();
         let tjd = TJD::new(tjd_types);
         
         // set up table fields
-        let mut happy_tbl_fields: HashMap<String, &'static str> = HashMap::new();
+        let mut happy_tbl_fields: HashMap<&'static str, (String, &'static str)> = HashMap::new();
         
         // loop default fields to make a test
         for field in tjd.fields.keys() {
             // style an example table field name
-            let tbl_field_name = "Table test field for ".to_owned() + field;
+            let tbl_field_name = "test_field_for_" + field;
+            let tbl_field_display_name = "Table test field for ".to_owned() + field;
             // add example table field to test table
-            happy_tbl_fields.insert(tbl_field_name, field);
+            happy_tbl_fields.insert(tbl_field_name, (tbl_field_display_name, field));
         }
         
         // create new table
@@ -359,15 +418,16 @@ mod tests {
         assert_eq!(happy_tbl_create_res.success, true);
         
         // set up table fields
-        let mut conflict_tbl_fields: HashMap<String, &'static str> = HashMap::new();
+        let mut conflict_tbl_fields: HashMap<&'static str, (String, &'static str)> = HashMap::new();
         
         // loop default fields to make a test
         for field in tjd.fields.keys() {
             // style an example table field name
-            let tbl_field_name = "Table test field for ".to_owned() + field;
+            let tbl_field_name = "test_field_for_" + field;
+            let tbl_field_display_name = "Table test field for ".to_owned() + field;
             
             // add example table field to test table with bad field ref name
-            conflict_tbl_fields.insert(tbl_field_name, "fake_field");
+            conflict_tbl_fields.insert(tbl_field_name, (tbl_field_display_name, "fake_field"));
         }
         
         // create new table
@@ -386,6 +446,7 @@ mod tests {
     }
     
     // add field to table
+    #[test]
     fn add_field_to_table() {
         // init
         let tjd_types = Types::new();
@@ -403,21 +464,31 @@ mod tests {
         match tbl_res.value {
             Some(tbl) => {
                 // add field to table
-                let tjd_table_field_standard = tjd.add_table_field(tbl, "i32", "Test table field 1");
+                let tjd_table_field_standard = tjd.create_table_field(
+                                                        "test_table",
+                                                        "i32",
+                                                        "test_tbl_field",
+                                                        "Test table field 1".to_owned());
                 
                 // should succeed
                 assert_eq!(tjd_table_field_standard.success, true);
                 
                 // add second field table with the same name to the same table
-                let tjd_table_field_dupe_name = tjd.add_table_field(tbl, "i32", "Test table field 1");
+                let tjd_table_field_dupe_name = tjd.create_table_field(
+                                                        "test_table",
+                                                        "bool",
+                                                        "test_tbl_field",
+                                                        "Test table field 1".to_owned());
                 
                 // should fail
                 assert_eq!(tjd_table_field_dupe_name.success, false);
                 
                 // add third field table with the same name to the same table
-                let tjd_table_field_nonexistent = tjd.add_table_field(tbl,
+                let tjd_table_field_nonexistent = tjd.create_table_field(
+                                                        "test_table",
                                                         "abcdefghijdklmnopqrstuvwxyz",
-                                                        "Test table field nonexistent");
+                                                        "test_tbl_field_1",
+                                                        "Test table field nonexistent".to_owned());
                 
                 // should fail
                 assert_eq!(tjd_table_field_nonexistent.success, false);
