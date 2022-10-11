@@ -2,5 +2,7 @@
 
 members = [
 	"tjd",
-	"types",
+	"tjd_api_response",
+	"tjd_the_drawer",
+	"tjd_the_junk"
 ]

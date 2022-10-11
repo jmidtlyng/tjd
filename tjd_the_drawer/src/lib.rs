@@ -2,65 +2,6 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-
-#[derive(Debug)]
-pub struct Types{
-    type_list: HashMap<&'static str, TjdType>
-}
-
-impl Types {
-    // initializes descriptions of raw types
-    fn new() -> Types {
-        // make an empty Types instance
-        let mut tjd_types = Types{ type_list: HashMap::new() };
-        
-        // fill in starter types
-        tjd_types.type_create("Integer", "i32", Some("Standard integer."), None);
-        tjd_types.type_create("Non-negative Integer", "u32", Some("Positive integer."), None);
-        tjd_types.type_create("Decimal", "f64", Some("Number with decimals."), None);
-        tjd_types.type_create("Text", "String", Some("Standard text."), None);
-        tjd_types.type_create("True/False", "bool", Some("True/false toggle."), None);
-        
-        // return available types
-        tjd_types
-    }
-    
-    // register custom type for frontend
-    fn type_create(&mut self,
-                    display_name: &'static str,
-                    type_name: &'static str,
-                    _description: Option<&'static str>,
-                    _archived: Option<&'static bool>)
-            -> TjdApiResponse<TjdType> {
-        // is name available
-        match self.type_list.get(type_name){
-            Some(existing_type) => {
-                // already set. error out
-                TjdApiResponse {
-                    success: false,
-                    message: Some(format!("There is already a type for '{}'' named '{}'.",
-                                            type_name, existing_type.display_name)),
-                    value: None
-                }
-            },
-            None => {
-                // make static since it wont change
-                let new_type = TjdType::new(display_name, _description, _archived);
-                
-                // create new atomic type and store reference
-                self.type_list.insert(type_name, new_type);
-                
-                // return successful response
-                TjdApiResponse {
-                    success: true,
-                    message: Some(format!("Type '{}' set.", type_name)),
-                    value: None
-                }
-            }
-        }
-    }
-}
-
 pub struct TJD {
     // Atomic types
     // Used in basic fields to build options for custom Types.
@@ -279,25 +220,6 @@ impl TJD {
 // client reference to native and custom Rust types.
 // no types or display names
 #[derive(Debug)]
-struct TjdType {
-    display_name: &'static str,
-    description: &'static str,
-    archived: &'static bool
-}
-
-impl TjdType {
-    fn new(display_name: &'static str,
-            _description: Option<&'static str>,
-            _archived: Option<&'static bool>) -> TjdType {
-        // description falls back on empty string slice
-        let description = _description.unwrap_or("");
-        let archived = _archived.unwrap_or(&false);
-        
-        TjdType{display_name, description, archived}
-    }
-}
-
-#[derive(Debug)]
 struct Field {
     display_name: Mutex<String>,
     tjd_type: &'static str,
@@ -344,71 +266,8 @@ impl TableField {
     }
 }
 
-// used to track exchanges with TJD api
-struct TjdApiResponse<T> {
-    success: bool,
-    message: Option<String>,
-    value: Option<T>
-}
-
 #[cfg(test)]
 mod tests {
-    // get context one layer above current
-    use super::*;
-    
-    // create types to build foundation of TJD. check against dupe types and names.
-    #[test]
-    fn type_create(){
-        // create instance of core. just a place to put stuff
-        let mut tjd_types = Types::new();
-                
-        // make new type. expect success.
-        let type_int = tjd_types.type_create("Test Type i8", "i8", None, None);
-        assert_eq!(type_int.success, true);
-        
-        // make another type using the same rust type. expext failure to dupe type.
-        let type_int_two = tjd_types.type_create("Test Type i8 redux", "i8", None, None);
-        assert_eq!(type_int_two.success, false);
-        
-        // add fourth atomic type with dupe name and different type. expect success.
-        let type_int_three = tjd_types.type_create("Test Type i8", "i16", None, None);
-        assert_eq!(type_int_three.success, true);
-    }
-    
-    // check prepackaged tjd types are installed 
-    #[test]
-    fn create_tjds_default_types(){
-        // init
-        let tjd_types = Types::new();
-        
-        // check initial types
-        match tjd_types.type_list.get("i32"){
-            Some(default_type) =>
-                assert_eq!(default_type.description, "Standard integer."),
-            None => println!("Failed to get Integer from Atomic Types")
-        }
-        match tjd_types.type_list.get("u16"){
-            Some(default_type) =>
-                assert_eq!(default_type.description, "Positive integer."),
-            None => println!("Failed to get Non-negative Integer from Atomic Types")
-        }
-        match tjd_types.type_list.get("f32"){
-            Some(default_type) =>
-                assert_eq!(default_type.description, "Number with decimals."),
-            None => println!("Failed to get Decimal from Atomic Types")
-        }
-        match tjd_types.type_list.get("String"){
-            Some(default_type) =>
-                assert_eq!(default_type.description, "Standard text."),
-            None => println!("Failed to get Text from Atomic Types")
-        }
-        match tjd_types.type_list.get("bool"){
-            Some(default_type) =>
-                assert_eq!(default_type.description, "True/false toggle."),
-            None => println!("Failed to get True/False from Atomic Types")
-        }
-    }
-    
     // make starter/default fields out of all types
     #[test]
     fn default_fields(){

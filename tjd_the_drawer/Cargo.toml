@@ -1,8 +1,11 @@
 [package]
-name = "tjd_builder"
+name = "tjd_the_drawer"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# regex = "1.6"
+tjd_api_response = { path = "../tjd_api_response"}
+# tjd_builder_derive = { path = "../tjd_builder/tjd_builder_derive"}
