@@ -2,6 +2,7 @@ extern crate tjd_api_response;
 // use std::fmt::Display;
 use std::collections::HashMap;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::prelude::*;
 use tjd_api_response::TjdApiResponse;
 
@@ -63,8 +64,8 @@ impl Types {
     }
     
     fn build(&self) -> TjdApiResponse<u8>{
-        // get file
-        let mut file_result = File::open("./tjd_type_enum.rs");
+        // get writeable file
+        let file_result = OpenOptions::new().write(true).open("src/tjd_type_enum.rs");
         
         match file_result {
             Ok(mut file) => {
@@ -77,21 +78,21 @@ impl Types {
                             value: None
                         }
                     },
-                    Err(_e) => {
+                    Err(e) => {
                         // return successful response
                         TjdApiResponse {
                             success: false,
-                            message: Some("Failure!".to_owned()),
+                            message: Some(format!("Failure! Error: {}", e)),
                             value: None
                         }
                     }
                 }
             },
-            Err(_e) => {
+            Err(e) => {
                 // return successful response
                 TjdApiResponse {
                     success: false,
-                    message: Some("Could not find file".to_owned()),
+                    message: Some(format!{"Could not find file. Error: {}", e}),
                     value: None
                 }
             }
