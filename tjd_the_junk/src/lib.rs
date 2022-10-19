@@ -63,13 +63,36 @@ impl Types {
         }
     }
     
-    fn build(&self) -> TjdApiResponse<u8>{
+    fn build(&self) -> TjdApiResponse<u8>{        
+        // make vector of keys by cloning type keys
+        let type_keys: Vec<&'static str> = self.type_list.keys().cloned().collect();
+        
+        // placeholder string to write type enum in
+        let mut type_enum_string = String::from("enum TjdTypes {
+            ");
+        
+        // loop types and build string
+        for type_key in type_keys {
+            // add line to type enum string
+            type_enum_string.push_str(type_key);
+            type_enum_string.push_str("(");
+            type_enum_string.push_str(type_key);
+            type_enum_string.push_str(")
+            ");
+        }
+        
+        type_enum_string.push_str("}");
+        
+        // temp testing during dev
+        println!("{}", type_enum_string);
+        
         // get writeable file
         let file_result = OpenOptions::new().write(true).open("src/tjd_type_enum.rs");
         
+        // validate writing to file
         match file_result {
             Ok(mut file) => {
-                match file.write_all(b"Hello, world!"){
+                match file.write_all(type_enum_string.as_bytes()){
                     Ok(_write_response) => {
                         // return successful response
                         TjdApiResponse {
