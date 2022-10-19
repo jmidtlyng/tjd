@@ -68,17 +68,16 @@ impl Types {
         let type_keys: Vec<&'static str> = self.type_list.keys().cloned().collect();
         
         // placeholder string to write type enum in
-        let mut type_enum_string = String::from("enum TjdTypes {
-            ");
+        let mut type_enum_string = String::from("enum TjdTypes {\n");
         
         // loop types and build string
         for type_key in type_keys {
             // add line to type enum string
+            type_enum_string.push_str("    ");
             type_enum_string.push_str(type_key);
             type_enum_string.push_str("(");
             type_enum_string.push_str(type_key);
-            type_enum_string.push_str(")
-            ");
+            type_enum_string.push_str(")\n");
         }
         
         type_enum_string.push_str("}");
