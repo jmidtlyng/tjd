@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 tjd_api_response = { path = "../tjd_api_response"}
+strum = "0.24"
+strum_macros = "0.24"

@@ -65,19 +65,33 @@ impl Types {
     
     fn build(&self) -> TjdApiResponse<u8>{        
         // make vector of keys by cloning type keys
-        let type_keys: Vec<&'static str> = self.type_list.keys().cloned().collect();
+        // let type_keys: Vec<&'static str> = self.type_list.keys().cloned().collect();
         
         // placeholder string to write type enum in
-        let mut type_enum_string = String::from("enum TjdTypes {\n");
+        let mut type_enum_string = String::from("use strum::EnumMessage;\n\
+                                                    use strum_macros;\n\n\
+                                                    #[derive(strum_macros::EnumMessage, Debug)]\n\
+                                                    #[allow(dead_code)]\n\
+                                                    enum TjdTypes {\n");
         
         // loop types and build string
-        for type_key in type_keys {
+        for (type_key, tjd_type) in &self.type_list {
             // add line to type enum string
             type_enum_string.push_str("    ");
+            // give enum strum message and detailed message
+            type_enum_string.push_str("#[strum(message = \"");
+            type_enum_string.push_str(tjd_type.display_name);
+            type_enum_string.push_str("\", detailed_message = \"");
+            type_enum_string.push_str(tjd_type.description);
+            type_enum_string.push_str("\")]\n");
+            // #[strum(message = "Red", detailed_message = "This is very red")]
+            // add line to type enum string
+            type_enum_string.push_str("    ");
+            
             type_enum_string.push_str(type_key);
             type_enum_string.push_str("(");
             type_enum_string.push_str(type_key);
-            type_enum_string.push_str(")\n");
+            type_enum_string.push_str("),\n");
         }
         
         type_enum_string.push_str("}");
