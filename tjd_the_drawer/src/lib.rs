@@ -1,7 +1,13 @@
 // use std::fmt::Display;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use strum::{EnumMessage, IntoEnumIterator};
 
+// types
+mod tjd_type_enum;
+use tjd_type_enum::TjdTypes;
+
+/*
 pub struct TJD {
     // Atomic types
     // Used in basic fields to build options for custom Types.
@@ -10,7 +16,6 @@ pub struct TJD {
     // so far the only difference between Atomic and Regular Types is
     // Regular have options
     // fixed code name as first value of each:
-    types: HashMap<&'static str, TjdTypeDefinition>,
     fields: HashMap<&'static str, Field>,
     tables: HashMap<&'static str, Table>,
     // record data is grouped by type like table
@@ -265,13 +270,21 @@ impl TableField {
                     archived: false }
     }
 }
+*/
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    
     // check all loaded types have readable names and descriptions
     #[test]
     fn load_tjd_types(){
-        
+        // loop tjd type enums and print name and description
+        for tjd_type in TjdTypes::iter() {
+            println!("{}: {}",
+                tjd_type.get_message().unwrap(),
+                tjd_type.get_detailed_message().unwrap());
+        }
     }
     /*
     // make starter/default fields out of all types

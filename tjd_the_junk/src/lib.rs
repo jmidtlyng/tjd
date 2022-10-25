@@ -1,7 +1,5 @@
 extern crate tjd_api_response;
-// use std::fmt::Display;
 use std::collections::HashMap;
-use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use tjd_api_response::TjdApiResponse;
@@ -63,16 +61,13 @@ impl Types {
         }
     }
     
-    fn build(&self) -> TjdApiResponse<u8>{        
-        // make vector of keys by cloning type keys
-        // let type_keys: Vec<&'static str> = self.type_list.keys().cloned().collect();
-        
+    fn build(&self) -> TjdApiResponse<u8>{
         // placeholder string to write type enum in
-        let mut type_enum_string = String::from("use strum::EnumMessage;\n\
-                                                    use strum_macros;\n\n\
-                                                    #[derive(strum_macros::EnumMessage, Debug)]\n\
+        let mut type_enum_string = String::from("use strum::{EnumMessage, IntoEnumIterator};\n\
+                                                    use strum_macros::{EnumIter, EnumMessage};\n\n\
+                                                    #[derive(EnumIter, EnumMessage, Debug)]\n\
                                                     #[allow(dead_code)]\n\
-                                                    enum TjdTypes {\n");
+                                                    pub enum TjdTypes {\n");
         
         // loop types and build string
         for (type_key, tjd_type) in &self.type_list {
@@ -99,8 +94,9 @@ impl Types {
         // temp testing during dev
         println!("{}", type_enum_string);
         
-        // get writeable file
-        let file_result = OpenOptions::new().write(true).open("src/tjd_type_enum.rs");
+        // get writeable file and remove anything inside it before accessing
+        let file_result = OpenOptions::new().write(true).truncate(true)
+                            .open("../tjd_the_drawer/src/tjd_type_enum.rs");
         
         // validate writing to file
         match file_result {
