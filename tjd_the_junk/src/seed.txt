@@ -1,0 +1,17 @@
+use strum::{EnumMessage, IntoEnumIterator};
+use strum_macros::{EnumIter, EnumMessage};
+
+// core of working program. stuff is a collection of things
+struct Drawer {
+		stuff: HashMap<&'static str, TjdTypes>
+}
+
+// need to be able to make things from types
+trait Thing {
+		fn create(type_name: &str) -> TjdTypes {}
+}
+
+// all available types for making things
+#[derive(EnumIter, EnumMessage, Debug)]
+#[allow(dead_code)]
+pub enum TjdTypes {

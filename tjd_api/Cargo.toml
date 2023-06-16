@@ -1,5 +1,5 @@
 [package]
-name = "tjd_api_response"
+name = "tjd_api"
 version = "0.1.0"
 edition = "2021"
 
