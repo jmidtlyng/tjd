@@ -7,6 +7,14 @@ use strum::{EnumMessage, IntoEnumIterator};
 mod tjd_type_enum;
 use tjd_type_enum::TjdTypes;
 
+// the junk for all references 
+use tjd_the_junk::Types;
+
+// core of working program. stuff is a collection of things
+struct Drawer {
+    stuff: HashMap<&'static str, TjdTypes>
+}
+
 /*
 pub struct TJD {
     // Atomic types
@@ -278,13 +286,30 @@ mod tests {
     
     // check all loaded types have readable names and descriptions
     #[test]
-    fn load_tjd_types(){
+    fn display_tjd_types(){
         // loop tjd type enums and print name and description
         for tjd_type in TjdTypes::iter() {
             println!("{}: {}",
                 tjd_type.get_message().unwrap(),
                 tjd_type.get_detailed_message().unwrap());
         }
+    }
+    
+    // create one thing of each type
+    #[test]
+    // create one thing of each type
+    #[test]
+    fn thing_create(){
+        // init
+        let tjd_types = Types::new();
+        
+        // following needs to be abstracted to one-liner:
+        // get int type from available types
+        let type_int = tjd_types.type_list.get("i32");
+        // create new thing of type i32
+        let thing_int = type_int.create();
+        // next give init value
+        thing_int = 10;
     }
     /*
     // make starter/default fields out of all types

@@ -8,12 +8,12 @@ use tjd_api::TjdApiResponse;
 
 #[derive(Debug)]
 pub struct Types{
-    type_list: HashMap<&'static str, TjdType>
+    pub type_list: HashMap<&'static str, TjdType>
 }
 
 impl Types {
     // initializes descriptions of raw types
-    fn new() -> Types {
+    pub fn new() -> Types {
         // make an empty Types instance
         let mut tjd_types = Types{ type_list: HashMap::new() };
         
@@ -66,92 +66,98 @@ impl Types {
     fn build(&self) -> TjdApiResponse<u8>{
         match fs::read_to_string("seed.txt") {
             Ok(seed_text) => {
-                match seed_text.parse() {
-                    Ok(type_enum_string) => {
-                        // string to fill enum definitions
-                        let mut enum_defs = String::from("");
-                        // write match case for thing trait's create fn
-                        let mut thing_impl = String::from("");
+                let mut type_enum_string = seed_text.to_owned();
+                // string to fill enum definitions
+                let mut enum_defs = String::from("").to_owned();
+                // write match case for thing trait's create fn
+                let mut thing_impl = String::from("").to_owned();
+                
+                // loop types and build string
+                for (type_key, tjd_type) in &self.type_list {
+                    // add line to type enum string
+                    enum_defs.push_str("    ");
+                    // give enum strum message and detailed message
+                    enum_defs.push_str("#[strum(message = \"");
+                    enum_defs.push_str(tjd_type.display_name);
+                    enum_defs.push_str("\", detailed_message = \"");
+                    enum_defs.push_str(tjd_type.description);
+                    enum_defs.push_str("\")]\n");
+                    // #[strum(message = "Red", detailed_message = "This is very red")]
+                    // add line to type enum string
+                    enum_defs.push_str("    ");
+                    
+                    // add Rust type. end with newline
+                    enum_defs.push_str(type_key);
+                    enum_defs.push_str("(");
+                    enum_defs.push_str(type_key);
+                    enum_defs.push_str("),\n");
+                    
+                    // build match case for Thing create fn. start with indent
+                    thing_impl.push_str("        ");
+                    // match display name and output type
+                    thing_impl.push_str("\"");
+                    thing_impl.push_str(tjd_type.display_name);
+                    // only None of no matches. return type from enum to inherit fns
+                    thing_impl.push_str("\" => Some(TjdTypes::");
+                    // new type and end with newline
+                    thing_impl.push_str(type_key);
+                    thing_impl.push_str("),\n");
+                }
+                
+                type_enum_string.push_str(&enum_defs);
+                
+                // parse impl of Thing trait on TjdTypes enum
+                match fs::read_to_string("soil.txt") {
+                    Ok(soil_text) => {
+                        let type_thing_impl_string = soil_text.to_owned();
+                        // add type creator to output
+                        type_enum_string.push_str(&type_thing_impl_string);
                         
-                        // loop types and build string
-                        for (type_key, tjd_type) in &self.type_list {
-                            // add line to type enum string
-                            enum_defs.push_str("    ");
-                            // give enum strum message and detailed message
-                            enum_defs.push_str("#[strum(message = \"");
-                            enum_defs.push_str(tjd_type.display_name);
-                            enum_defs.push_str("\", detailed_message = \"");
-                            enum_defs.push_str(tjd_type.description);
-                            enum_defs.push_str("\")]\n");
-                            // #[strum(message = "Red", detailed_message = "This is very red")]
-                            // add line to type enum string
-                            enum_defs.push_str("    ");
-                            
-                            // add Rust type
-                            enum_defs.push_str(type_key);
-                            enum_defs.push_str("(");
-                            enum_defs.push_str(type_key);
-                            enum_defs.push_str("),\n");
-                            
-                            // build match case for Thing create fn. start with indent
-                            thing_impl.push_str("        ");
-                        }
+                        // add enum type implementers set up during type loops
+                        type_enum_string.push_str(&thing_impl);
                         
-                        type_enum_string.push_str(enum_defs);
-                        
-                        // parse impl of Thing trait on TjdTypes enum
-                        match fs::read_to_string("soil.txt") {
-                            Ok(soil_text) => {
-                                match soil_text.parse() {
-                                    Ok(type_thing_impl_string) => {
-                                        // add to output
-                                        type_enum_string.push_str(type_thing_impl_string);
-                        
-                                        // temp testing during dev
-                                        println!("{}", type_enum_string);
-                                        
-                                        // get writeable file and remove anything inside it before accessing
-                                        let file_result = OpenOptions::new().write(true).truncate(true)
-                                                            .open("../tjd_the_drawer/src/tjd_type_enum.rs");
-                                        
-                                        // validate writing to file
-                                        match file_result {
-                                            Ok(mut file) => {
-                                                match file.write_all(type_enum_string.as_bytes()){
-                                                    Ok(_write_response) => {
-                                                        // return successful response
-                                                        TjdApiResponse {
-                                                            success: true,
-                                                            message: Some("Success!".to_owned()),
-                                                            value: None
-                                                        }
-                                                    },
-                                                    Err(e) => {
-                                                        // return successful response
-                                                        TjdApiResponse {
-                                                            success: false,
-                                                            message: Some(format!("Failure! Error: {}", e)),
-                                                            value: None
-                                                        }
-                                                    }
+                        // close type implementors with None option and brackets
+                        match fs::read_to_string("sunlight.txt") {
+                            Ok(sunlight_text) => {
+                                let type_thing_impl_close_string = sunlight_text.to_owned();
+                                // push closing lines of implementor
+                                type_enum_string.push_str(&type_thing_impl_close_string);
+                                
+                                // temp testing during dev
+                                println!("{}", type_enum_string);
+                                
+                                // get writeable file and remove anything inside it before accessing
+                                let file_result = OpenOptions::new().write(true).truncate(true)
+                                                    .open("../tjd_the_drawer/src/tjd_type_enum.rs");
+                                
+                                // validate writing to file
+                                match file_result {
+                                    Ok(mut file) => {
+                                        match file.write_all(type_enum_string.as_bytes()){
+                                            Ok(_write_response) => {
+                                                // return successful response
+                                                TjdApiResponse {
+                                                    success: true,
+                                                    message: Some("Success!".to_owned()),
+                                                    value: None
                                                 }
                                             },
                                             Err(e) => {
                                                 // return successful response
                                                 TjdApiResponse {
                                                     success: false,
-                                                    message: Some(format!{"Could not find file. Error: {}", e}),
+                                                    message: Some(format!("Failure! Error: {}", e)),
                                                     value: None
                                                 }
                                             }
                                         }
                                     },
-                                    Error => {
+                                    Err(e) => {
                                         // return successful response
                                         TjdApiResponse {
-                                            success: true,
-                                            message: Some(String::from("Could not parse seed.txt")),
-                                            value: Error
+                                            success: false,
+                                            message: Some(format!{"Could not find file. Error: {}", e}),
+                                            value: None
                                         }
                                     }
                                 }
@@ -159,9 +165,9 @@ impl Types {
                             Error => {
                                 // return successful response
                                 TjdApiResponse {
-                                    success: true,
-                                    message: Some(String::from("Could not find seed.txt")),
-                                    value: Error
+                                    success: false,
+                                    message: Some(String::from("Could not find sunlight.txt")),
+                                    value: None
                                 }
                             }
                         }
@@ -169,9 +175,9 @@ impl Types {
                     Error => {
                         // return successful response
                         TjdApiResponse {
-                            success: true,
-                            message: Some(String::from("Could not parse seed.txt")),
-                            value: Error
+                            success: false,
+                            message: Some(String::from("Could not find soil.txt")),
+                            value: None
                         }
                     }
                 }
@@ -179,9 +185,9 @@ impl Types {
             Error => {
                 // return successful response
                 TjdApiResponse {
-                    success: true,
+                    success: false,
                     message: Some(String::from("Could not find seed.txt")),
-                    value: Error
+                    value: None
                 }
             }
         }
@@ -189,7 +195,7 @@ impl Types {
 }
 
 #[derive(Debug)]
-struct TjdType {
+pub struct TjdType {
     display_name: &'static str,
     description: &'static str,
     archived: &'static bool

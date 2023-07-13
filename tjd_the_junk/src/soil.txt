@@ -2,5 +2,5 @@
 
 // look up input and output a type
 impl Thing for TjdTypes{
-		fn create(type_name: &str) -> TjdTypes {
+		fn create(type_name: &str) -> Result<TjdTypes> {
 				match type_name {

@@ -1,14 +1,10 @@
 use strum::{EnumMessage, IntoEnumIterator};
 use strum_macros::{EnumIter, EnumMessage};
 
-// core of working program. stuff is a collection of things
-struct Drawer {
-		stuff: HashMap<&'static str, TjdTypes>
-}
-
+// https://stackoverflow.com/questions/51567350/can-traits-be-used-on-enum-types
 // need to be able to make things from types
 trait Thing {
-		fn create(type_name: &str) -> TjdTypes {}
+		fn create(type_name: &str) -> Option<TjdTypes> {}
 }
 
 // all available types for making things
