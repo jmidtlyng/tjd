@@ -1,12 +1,6 @@
 use strum::{EnumMessage, IntoEnumIterator};
 use strum_macros::{EnumIter, EnumMessage};
 
-// https://stackoverflow.com/questions/51567350/can-traits-be-used-on-enum-types
-// need to be able to make things from types
-trait Thing {
-		fn create(type_name: &str) -> Option<TjdTypes> {}
-}
-
 // all available types for making things
 #[derive(EnumIter, EnumMessage, Debug)]
 #[allow(dead_code)]

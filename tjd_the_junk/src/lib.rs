@@ -18,11 +18,11 @@ impl Types {
         let mut tjd_types = Types{ type_list: HashMap::new() };
         
         // fill in starter types
-        tjd_types.type_create("Integer", "i32", Some("Standard integer."), None);
-        tjd_types.type_create("Non-negative Integer", "u32", Some("Positive integer."), None);
-        tjd_types.type_create("Decimal", "f64", Some("Number with decimals."), None);
-        tjd_types.type_create("Text", "String", Some("Standard text."), None);
-        tjd_types.type_create("True/False", "bool", Some("True/false toggle."), None);
+        tjd_types.type_create("Integer", "i32", "0", Some("Standard integer."), None);
+        tjd_types.type_create("Non-negative Integer", "u32", "0", Some("Positive integer."), None);
+        tjd_types.type_create("Decimal", "f64", "0.0", Some("Number with decimals."), None);
+        tjd_types.type_create("Text", "String", "String::from(\"\")", Some("Standard text."), None);
+        tjd_types.type_create("True/False", "bool", "false", Some("True/false toggle."), None);
         
         // return available types
         tjd_types
@@ -32,6 +32,7 @@ impl Types {
     fn type_create(&mut self,
                     display_name: &'static str,
                     type_name: &'static str,
+                    init_val_text: &'static str,
                     _description: Option<&'static str>,
                     _archived: Option<&'static bool>)
             -> TjdApiResponse<TjdType> {
@@ -48,7 +49,7 @@ impl Types {
             },
             None => {
                 // make static since it wont change
-                let new_type = TjdType::new(display_name, _description, _archived);
+                let new_type = TjdType::new(display_name, init_val_text, _description, _archived);
                 
                 // create new atomic type and store reference
                 self.type_list.insert(type_name, new_type);
@@ -64,7 +65,7 @@ impl Types {
     }
     
     fn build(&self) -> TjdApiResponse<u8>{
-        match fs::read_to_string("seed.txt") {
+        match fs::read_to_string("./src/seed.txt") {
             Ok(seed_text) => {
                 let mut type_enum_string = seed_text.to_owned();
                 // string to fill enum definitions
@@ -101,13 +102,16 @@ impl Types {
                     thing_impl.push_str("\" => Some(TjdTypes::");
                     // new type and end with newline
                     thing_impl.push_str(type_key);
-                    thing_impl.push_str("),\n");
+                    // initial value. No nulls
+                    thing_impl.push_str("(");
+                    thing_impl.push_str(tjd_type.init_val_text);
+                    thing_impl.push_str(")),\n");
                 }
                 
                 type_enum_string.push_str(&enum_defs);
                 
                 // parse impl of Thing trait on TjdTypes enum
-                match fs::read_to_string("soil.txt") {
+                match fs::read_to_string("./src/soil.txt") {
                     Ok(soil_text) => {
                         let type_thing_impl_string = soil_text.to_owned();
                         // add type creator to output
@@ -117,7 +121,7 @@ impl Types {
                         type_enum_string.push_str(&thing_impl);
                         
                         // close type implementors with None option and brackets
-                        match fs::read_to_string("sunlight.txt") {
+                        match fs::read_to_string("./src/sunlight.txt") {
                             Ok(sunlight_text) => {
                                 let type_thing_impl_close_string = sunlight_text.to_owned();
                                 // push closing lines of implementor
@@ -162,7 +166,7 @@ impl Types {
                                     }
                                 }
                             },
-                            Error => {
+                            _error => {
                                 // return successful response
                                 TjdApiResponse {
                                     success: false,
@@ -172,7 +176,7 @@ impl Types {
                             }
                         }
                     },
-                    Error => {
+                    _error => {
                         // return successful response
                         TjdApiResponse {
                             success: false,
@@ -182,7 +186,7 @@ impl Types {
                     }
                 }
             },
-            Error => {
+            _error => {
                 // return successful response
                 TjdApiResponse {
                     success: false,
@@ -196,20 +200,22 @@ impl Types {
 
 #[derive(Debug)]
 pub struct TjdType {
-    display_name: &'static str,
-    description: &'static str,
-    archived: &'static bool
+    pub display_name: &'static str,
+    init_val_text: &'static str,
+    pub description: &'static str,
+    pub archived: &'static bool
 }
 
 impl TjdType {
     fn new(display_name: &'static str,
+            init_val_text: &'static str,
             _description: Option<&'static str>,
             _archived: Option<&'static bool>) -> TjdType {
         // description falls back on empty string slice
         let description = _description.unwrap_or("");
         let archived = _archived.unwrap_or(&false);
         
-        TjdType{display_name, description, archived}
+        TjdType{display_name, init_val_text, description, archived}
     }
 }
 
@@ -225,15 +231,15 @@ mod tests {
         let mut tjd_types = Types::new();
                 
         // make new type. expect success.
-        let type_int = tjd_types.type_create("Test Type i8", "i8", None, None);
+        let type_int = tjd_types.type_create("Test Type i8", "i8", "0", None, None);
         assert_eq!(type_int.success, true);
         
         // make another type using the same rust type. expect failure to dupe type.
-        let type_int_two = tjd_types.type_create("Test Type i8 redux", "i8", None, None);
+        let type_int_two = tjd_types.type_create("Test Type i8 redux", "i8", "0", None, None);
         assert_eq!(type_int_two.success, false);
         
         // add fourth atomic type with dupe name and different type. expect success.
-        let type_int_three = tjd_types.type_create("Test Type i8", "i16", None, None);
+        let type_int_three = tjd_types.type_create("Test Type i8", "i16", "0", None, None);
         assert_eq!(type_int_three.success, true);
     }
     

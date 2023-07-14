@@ -6,6 +6,7 @@ use strum::{EnumMessage, IntoEnumIterator};
 // types
 mod tjd_type_enum;
 use tjd_type_enum::TjdTypes;
+use tjd_type_enum::thing_create;
 
 // the junk for all references 
 use tjd_the_junk::Types;
@@ -297,19 +298,25 @@ mod tests {
     
     // create one thing of each type
     #[test]
-    // create one thing of each type
-    #[test]
-    fn thing_create(){
+    fn create_default_things(){
         // init
         let tjd_types = Types::new();
         
         // following needs to be abstracted to one-liner:
         // get int type from available types
-        let type_int = tjd_types.type_list.get("i32");
-        // create new thing of type i32
-        let thing_int = type_int.create();
-        // next give init value
-        thing_int = 10;
+        let type_int = tjd_types.type_list.get("String");
+        match type_int {
+            Some(type_int_val) => {
+                // create new thing of type i32
+                match thing_create(type_int_val.display_name){
+                    Some(thing) => {
+                        println!("{:?}", thing);
+                    },
+                    None => println!("{}", "nothing")
+                }
+            },
+            None => println!("{}", "failure")
+        }
     }
     /*
     // make starter/default fields out of all types

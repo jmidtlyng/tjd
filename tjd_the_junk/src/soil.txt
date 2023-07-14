@@ -1,6 +1,5 @@
 }
 
 // look up input and output a type
-impl Thing for TjdTypes{
-		fn create(type_name: &str) -> Result<TjdTypes> {
-				match type_name {
+pub fn thing_create(type_name: &str) -> Option<TjdTypes> {
+		match type_name {
