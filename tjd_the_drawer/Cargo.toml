@@ -8,5 +8,3 @@ edition = "2021"
 [dependencies]
 tjd_api = { path = "../tjd_api"}
 tjd_the_junk = { path = "../tjd_the_junk"}
-strum = "0.24"
-strum_macros = "0.24"

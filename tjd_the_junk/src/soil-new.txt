@@ -1,0 +1,6 @@
+	  }
+}
+
+// look up input and output a type
+pub fn thing_create(name: &str) -> Option<Thing> {
+		match name {

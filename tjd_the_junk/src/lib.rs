@@ -65,7 +65,7 @@ impl Types {
     }
     
     fn build(&self) -> TjdApiResponse<u8>{
-        match fs::read_to_string("./src/seed.txt") {
+        match fs::read_to_string("./src/seed-new.txt") {
             Ok(seed_text) => {
                 let mut type_enum_string = seed_text.to_owned();
                 // string to fill enum definitions
@@ -73,20 +73,11 @@ impl Types {
                 // write match case for thing trait's create fn
                 let mut thing_impl = String::from("").to_owned();
                 
-                // loop types and build string
-                for (type_key, tjd_type) in &self.type_list {
-                    // add line to type enum string
-                    enum_defs.push_str("    ");
-                    // give enum strum message and detailed message
-                    enum_defs.push_str("#[strum(message = \"");
-                    enum_defs.push_str(tjd_type.display_name);
-                    enum_defs.push_str("\", detailed_message = \"");
-                    enum_defs.push_str(tjd_type.description);
-                    enum_defs.push_str("\")]\n");
-                    // #[strum(message = "Red", detailed_message = "This is very red")]
-                    // add line to type enum string
-                    enum_defs.push_str("    ");
-                    
+                // loop types and build string. using text file instead of macro for strum
+                for (type_key, tjd_type) in &self.type_list {  
+                    // add spacing
+                    enum_defs.push_str("        ");
+                  
                     // add Rust type. end with newline
                     enum_defs.push_str(type_key);
                     enum_defs.push_str("(");
@@ -99,7 +90,7 @@ impl Types {
                     thing_impl.push_str("\"");
                     thing_impl.push_str(tjd_type.display_name);
                     // only None of no matches. return type from enum to inherit fns
-                    thing_impl.push_str("\" => Some(TjdTypes::");
+                    thing_impl.push_str("\" => Some(Thing::");
                     // new type and end with newline
                     thing_impl.push_str(type_key);
                     // initial value. No nulls
@@ -108,10 +99,11 @@ impl Types {
                     thing_impl.push_str(")),\n");
                 }
                 
+                // append main text with enums
                 type_enum_string.push_str(&enum_defs);
                 
                 // parse impl of Thing trait on TjdTypes enum
-                match fs::read_to_string("./src/soil.txt") {
+                match fs::read_to_string("./src/soil-new.txt") {
                     Ok(soil_text) => {
                         let type_thing_impl_string = soil_text.to_owned();
                         // add type creator to output
@@ -121,7 +113,7 @@ impl Types {
                         type_enum_string.push_str(&thing_impl);
                         
                         // close type implementors with None option and brackets
-                        match fs::read_to_string("./src/sunlight.txt") {
+                        match fs::read_to_string("./src/sunlight-new.txt") {
                             Ok(sunlight_text) => {
                                 let type_thing_impl_close_string = sunlight_text.to_owned();
                                 // push closing lines of implementor
@@ -132,7 +124,7 @@ impl Types {
                                 
                                 // get writeable file and remove anything inside it before accessing
                                 let file_result = OpenOptions::new().write(true).truncate(true)
-                                                    .open("../tjd_the_drawer/src/tjd_type_enum.rs");
+                                                    .open("../tjd_the_drawer/src/tjd_type_enum_macro.rs");
                                 
                                 // validate writing to file
                                 match file_result {

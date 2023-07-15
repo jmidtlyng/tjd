@@ -1,19 +1,25 @@
 // use std::fmt::Display;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use strum::{EnumMessage, IntoEnumIterator};
 
 // types
+/*
 mod tjd_type_enum;
 use tjd_type_enum::TjdTypes;
 use tjd_type_enum::thing_create;
+*/
+mod tjd_type_enum_macro;
+
+use tjd_type_enum_macro::Thing;
+use tjd_type_enum_macro::thing_create;
+
 
 // the junk for all references 
 use tjd_the_junk::Types;
 
 // core of working program. stuff is a collection of things
 struct Drawer {
-    stuff: HashMap<&'static str, TjdTypes>
+    stuff: HashMap<&'static str, Thing>
 }
 
 /*
@@ -286,6 +292,7 @@ mod tests {
     use super::*;
     
     // check all loaded types have readable names and descriptions
+    /*
     #[test]
     fn display_tjd_types(){
         // loop tjd type enums and print name and description
@@ -295,6 +302,7 @@ mod tests {
                 tjd_type.get_detailed_message().unwrap());
         }
     }
+    */
     
     // create one thing of each type
     #[test]
@@ -309,8 +317,15 @@ mod tests {
             Some(type_int_val) => {
                 // create new thing of type i32
                 match thing_create(type_int_val.display_name){
-                    Some(thing) => {
-                        println!("{:?}", thing);
+                    Some(raw_thing) => {
+                        let thing = String::try_from(raw_thing).unwrap();
+                        println!("Stringy {}",thing);
+                        /*
+                        match Thing::try_from(raw_thing){
+                            Ok(thing) => println!("test: {}", thing.unwrap()),
+                            Err(e) => println!("{:?}", e)
+                        }
+                        */
                     },
                     None => println!("{}", "nothing")
                 }

@@ -1,3 +1,5 @@
 				_ => None,
 		}
 }
+
+// https://stackoverflow.com/questions/34953711/unwrap-inner-type-when-enum-variant-is-known
